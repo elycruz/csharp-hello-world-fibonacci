@@ -16,7 +16,10 @@ namespace Fibonacci
 
         public static bool isSudoValidReversePolishString (String xs)
         {
-            return Regex.IsMatch(xs, @"^[\d\-\+][\deExX\^\*\%\÷\+\-\/\s]*$");
+            return xs.Length > 0 && (
+                    Regex.IsMatch(xs, @"^\d+$") ||
+                    Regex.IsMatch(xs, @"^[\d\+\-][\d\s\+\-\/\*\%\^eExX\÷]+$")
+                );
         }
 
         public static Tuple<bool, String> toResult(String str)
@@ -29,7 +32,8 @@ namespace Fibonacci
 
             ArrayList xs = new ArrayList();
             String[] parts = str.Split(' ');
-            String lastOp;
+            String lastOp = "";
+            Tuple<bool, String> outResult;
             Int32 ind = 0;
 
             foreach (String x in parts)
@@ -46,7 +50,7 @@ namespace Fibonacci
                     continue;
                 }
 
-                lastOp = x.ToLower();
+                String possibleCorrectOp = x.ToLower();
 
                 dynamic a = xs[ind - 2];
                 dynamic b = xs[ind - 1];
@@ -57,7 +61,7 @@ namespace Fibonacci
 
                 ind -= 2;
 
-                switch (lastOp)
+                switch (possibleCorrectOp)
                 {
                     case "e":
                     case "^":
@@ -88,14 +92,25 @@ namespace Fibonacci
                 if (c != null)
                 {
                     xs.Add(c);
+                    lastOp = possibleCorrectOp;
                     ind += 1;
                 }
             }
 
-            return Tuple.Create(
-                true, 
-                xs.Count > 1 ? Convert.ToString(xs[0]) : Convert.ToString(xs[0])
-            );
+            bool reversePolishSuccess = xs.Count == 1;
+
+            if (!reversePolishSuccess)
+            {
+                int lastIndex = xs.Count - 1;
+                xs.InsertRange(lastIndex, (new String(lastOp.ToCharArray()[0], lastIndex)).ToArray());
+                outResult = toResult(String.Join(" ", xs));
+            }
+            else
+            {
+                outResult = Tuple.Create(reversePolishSuccess, Convert.ToString(xs[0]));
+            }
+
+            return outResult;
         }
     }
 }
